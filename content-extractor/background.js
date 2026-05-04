@@ -2,10 +2,8 @@
 
 'use strict';
 
-// Import the system prompt (service worker supports importScripts)
 importScripts('system-prompt.js');
 
-// ─── Error Parser ─────────────────────────────────────────────────────────────
 function parseGeminiError(errorMessage) {
   const msg = String(errorMessage).toUpperCase();
   if (msg.includes('API_KEY_INVALID') || msg.includes('400'))
@@ -23,7 +21,6 @@ function parseGeminiError(errorMessage) {
   return `Gemini Error: ${errorMessage}`;
 }
 
-// ─── Gemini API Call ──────────────────────────────────────────────────────────
 async function callGeminiAPI(apiKey, content) {
   const GEMINI_MODEL = 'gemini-2.5-flash-lite';
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
@@ -65,13 +62,11 @@ async function callGeminiAPI(apiKey, content) {
     throw new Error('Received an invalid response from Gemini. Please try again.');
   }
 
-  // Extract the text from candidates
   const candidate = data?.candidates?.[0];
   if (!candidate) {
     throw new Error('Gemini returned no candidates. The content may have been filtered.');
   }
 
-  // Check for finish reason issues
   const finishReason = candidate.finishReason;
   if (finishReason === 'SAFETY') {
     throw new Error('Content blocked by Gemini safety filters. Try on a different conversation.');
@@ -90,7 +85,6 @@ async function callGeminiAPI(apiKey, content) {
   return markdown;
 }
 
-// ─── Message Listener ─────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'CALL_GEMINI') {
     const { apiKey, content } = message;

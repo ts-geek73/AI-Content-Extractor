@@ -3,12 +3,7 @@
   "name": "AI Content Extractor",
   "version": "1.0.0",
   "description": "Extract and convert AI chat content to clean Markdown",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "tabs"
-  ],
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": [
     "https://claude.ai/*",
     "https://chatgpt.com/*",

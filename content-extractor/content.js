@@ -1,11 +1,8 @@
-// content.js — DOM extractor injected into claude.ai / chatgpt.com tabs
-// Guard against double-injection
+
 if (window.__aiExtractorInjected) {
-  // Already active — just respond to messages
 } else {
   window.__aiExtractorInjected = true;
 
-  // ─── Platform Selectors ───────────────────────────────────────────────────
   const PLATFORM_SELECTORS = {
     'claude.ai': {
       messageContainer: '[data-testid="conversation-turn"], .font-claude-message, .font-user-message, [class*="ConversationItem"], [class*="conversation-turn"], .grid-cols-1 > div',
@@ -21,7 +18,6 @@ if (window.__aiExtractorInjected) {
     }
   };
 
-  // ─── Detect Platform ──────────────────────────────────────────────────────
   function detectPlatform() {
     const host = window.location.hostname;
     if (host.includes('claude.ai'))   return 'claude.ai';
@@ -29,7 +25,6 @@ if (window.__aiExtractorInjected) {
     return null;
   }
 
-  // ─── Wait for Content ─────────────────────────────────────────────────────
   function waitForContent(selector, timeout = 3000) {
     return new Promise((resolve, reject) => {
       const el = document.querySelector(selector);
@@ -53,20 +48,16 @@ if (window.__aiExtractorInjected) {
     });
   }
 
-  // ─── Clean a Cloned Node ──────────────────────────────────────────────────
   const REMOVE_TAGS = ['script','style','noscript','svg','iframe','canvas','video','audio','head','nav','footer'];
   const KEEP_ATTRS  = new Set(['src','href','alt','title','type']);
 
   function cleanNode(root) {
-    // Remove unwanted tags
     REMOVE_TAGS.forEach(tag => {
       root.querySelectorAll(tag).forEach(el => el.remove());
     });
 
-    // Remove UI chrome elements (buttons, icons, tooltips)
     root.querySelectorAll('button, [role="button"], [aria-label="Copy"], [data-testid*="copy"]').forEach(el => el.remove());
 
-    // Walk all elements and strip non-essential attributes
     root.querySelectorAll('*').forEach(el => {
       const attrsToRemove = [];
       for (const attr of el.attributes) {
@@ -80,7 +71,6 @@ if (window.__aiExtractorInjected) {
     return root;
   }
 
-  // ─── Extract Image URLs ───────────────────────────────────────────────────
   function extractImages(root, selector) {
     const images = [];
     root.querySelectorAll(selector).forEach(img => {
@@ -92,7 +82,6 @@ if (window.__aiExtractorInjected) {
     return [...new Set(images)]; // deduplicate
   }
 
-  // ─── Node to Text ─────────────────────────────────────────────────────────
   function nodeToText(node) {
     // Attempt to preserve meaningful structure via innerText,
     // but fall back to textContent if needed
@@ -100,7 +89,6 @@ if (window.__aiExtractorInjected) {
     return node.textContent || '';
   }
 
-  // ─── Main Extraction ──────────────────────────────────────────────────────
   async function extractContent() {
     const platform = detectPlatform();
     if (!platform) {
@@ -109,10 +97,8 @@ if (window.__aiExtractorInjected) {
 
     const selectors = PLATFORM_SELECTORS[platform];
 
-    // Wait for conversation to be present
     await waitForContent(selectors.messageContainer, 6000);
 
-    // Clone the body to avoid mutating the live DOM
     const bodyClone = document.body.cloneNode(true);
     const imageUrls = extractImages(bodyClone, selectors.images);
 
