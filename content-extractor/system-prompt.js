@@ -4,45 +4,6 @@ extracted from AI chat platforms (Claude.ai, ChatGPT) into a clean, accurate,
 well-structured Markdown document.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## MANDATORY FIRST ACTION — SHOW YOUR ANALYSIS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-YOU MUST write your analysis inside an <analysis> block BEFORE producing
-any Markdown output. Do not skip this. Do not merge it with output.
-The analysis block is your scratchpad — it must appear first, visibly.
-
-<analysis>
-PLATFORM: [Claude.ai | ChatGPT]
-SPEAKER_LABEL: [AI (Claude) | AI (ChatGPT)]
-
-CONTENT TYPES DETECTED:
-- [ ] Long explanations / paragraphs         → Use SITUATION 1
-- [ ] Many short topics / bullet points      → Use SITUATION 2
-- [ ] Code snippets or full programs         → Use SITUATION 3
-- [ ] Step-by-step instructions              → Use SITUATION 9
-- [ ] Comparisons or multiple concepts       → Use SITUATION 6
-- [ ] Definitions / glossary-style content   → Use SITUATION 7
-- [ ] Warnings, tips, or callouts            → Use SITUATION 8
-- [ ] Mixed content (multiple types above)   → Use SITUATION 5
-- [ ] Large multi-topic document             → Use SITUATION 10
-
-IMAGE CHECK:
-- Actual image URLs found? [YES / NO]
-- If YES, list them: [url1, url2, ...]
-- ## Images section will be: [INCLUDED / OMITTED]
-
-RESOURCE/URL CHECK:
-- Non-image URLs found? [YES / NO]
-- ## Resources & Links section will be: [INCLUDED / OMITTED]
-
-FORMATTING PLAN:
-I will use SITUATION(S): [list numbers]
-Reason: [one sentence why]
-</analysis>
-
-Only after closing </analysis> should you begin writing the Markdown output.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## OUTPUT STRUCTURE (Always Use This)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -74,7 +35,6 @@ Only after closing </analysis> should you begin writing the Markdown output.
 ## FORMATTING SITUATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Apply the situation(s) you identified in your <analysis> block.
 You may combine multiple situations in one document.
 
 ---
@@ -275,30 +235,6 @@ Brief explanation...
 
 ### Example Output (correct Markdown):
 
-<analysis>
-PLATFORM: Claude.ai
-SPEAKER_LABEL: AI (Claude)
-
-CONTENT TYPES DETECTED:
-- [x] Many short topics / bullet points      → Use SITUATION 2
-- [x] Code snippets or full programs         → Use SITUATION 3
-- [x] Warnings, tips, or callouts            → Use SITUATION 8
-
-IMAGE CHECK:
-- Actual image URLs found? NO
-- ## Images section will be: OMITTED
-
-RESOURCE/URL CHECK:
-- Non-image URLs found? NO
-- ## Resources & Links section will be: OMITTED
-
-FORMATTING PLAN:
-I will use SITUATIONS: 2, 3, 8
-Reason: The response has a bullet list of options, a code block, and a tip callout.
-</analysis>
-
----
-
 # Centering a Div in CSS
 
 ## Overview
@@ -355,7 +291,6 @@ NEVER:
 - ❌ Duplicate any content — include it exactly once
 
 ALWAYS:
-- ✅ Write your <analysis> block first before any Markdown output
 - ✅ Reproduce the exact conversation sequence
 - ✅ Preserve all code indentation and whitespace perfectly
 - ✅ Add a language identifier to every fenced code block
