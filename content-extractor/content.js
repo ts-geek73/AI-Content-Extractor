@@ -5,9 +5,9 @@ if (window.__aiExtractorInjected) {
 
   const PLATFORM_SELECTORS = {
     'claude.ai': {
-      messageContainer: '[data-testid="conversation-turn"], .font-claude-message, .font-user-message, [class*="ConversationItem"], [class*="conversation-turn"], .grid-cols-1 > div',
-      humanMessage:     '[data-testid="human-turn"], [class*="human-turn"], .font-user-message',
-      aiMessage:        '[data-testid="assistant-turn"], .font-claude-message, [class*="assistant-turn"]',
+      messageContainer: '[data-testid="user-message"], div.standard-markdown, div[data-user-message-bubble="true"], div[data-is-streaming="false"] div.standard-markdown',
+      humanMessage:     '[data-testid="user-message"], div[data-user-message-bubble="true"]',
+      aiMessage:        'div.standard-markdown, div.font-claude-response',
       images:           'img[src]:not([src^="data:"])'
     },
     'chatgpt.com': {
@@ -83,10 +83,66 @@ if (window.__aiExtractorInjected) {
   }
 
   function nodeToText(node) {
-    // Attempt to preserve meaningful structure via innerText,
-    // but fall back to textContent if needed
     if (node.innerText !== undefined) return node.innerText;
     return node.textContent || '';
+  }
+
+  function escapeMd(text) {
+    return String(text || '').replace(/\|/g, '\\|').trim();
+  }
+
+  function htmlToMarkdown(node) {
+    if (!node) return '';
+
+    const tag = (node.tagName || '').toLowerCase();
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || '';
+    if (node.nodeType !== Node.ELEMENT_NODE) return '';
+
+    if (tag === 'pre') {
+      const code = node.querySelector('code');
+      const raw = (code ? code.textContent : node.textContent) || '';
+      return `\n\`\`\`\n${raw.trimEnd()}\n\`\`\`\n`;
+    }
+
+    if (tag === 'code') return `\`${(node.textContent || '').trim()}\``;
+
+    if (tag === 'p') return `${Array.from(node.childNodes).map(htmlToMarkdown).join('').trim()}\n\n`;
+    if (tag === 'br') return '\n';
+    if (/^h[1-6]$/.test(tag)) {
+      const level = Number(tag.slice(1));
+      return `${'#'.repeat(level)} ${node.textContent.trim()}\n\n`;
+    }
+
+    if (tag === 'ul' || tag === 'ol') {
+      const items = Array.from(node.querySelectorAll(':scope > li')).map((li, i) => {
+        const prefix = tag === 'ol' ? `${i + 1}. ` : '- ';
+        return `${prefix}${li.textContent.trim()}`;
+      });
+      return `${items.join('\n')}\n\n`;
+    }
+
+    if (tag === 'a') {
+      const text = (node.textContent || '').trim();
+      const href = node.getAttribute('href') || '';
+      return href ? `[${text}](${href})` : text;
+    }
+
+    if (tag === 'table') {
+      const rows = Array.from(node.querySelectorAll('tr'));
+      if (rows.length === 0) return '';
+      const cells = rows.map(r => Array.from(r.querySelectorAll('th,td')).map(c => escapeMd(c.textContent)));
+      const header = cells[0];
+      const sep = header.map(() => '---');
+      const body = cells.slice(1);
+      const lines = [
+        `| ${header.join(' | ')} |`,
+        `| ${sep.join(' | ')} |`,
+        ...body.map(r => `| ${r.join(' | ')} |`)
+      ];
+      return `${lines.join('\n')}\n\n`;
+    }
+
+    return Array.from(node.childNodes).map(htmlToMarkdown).join('');
   }
 
   async function extractContent() {
@@ -133,7 +189,7 @@ if (window.__aiExtractorInjected) {
           else role = 'Unknown';
         }
 
-        const text = nodeToText(msgEl).trim();
+        const text = htmlToMarkdown(msgEl).trim() || nodeToText(msgEl).trim();
         if (text.length > 5) {
           lines.push(`--- Message ${idx + 1} | Role: ${role} ---`);
           lines.push(text);
