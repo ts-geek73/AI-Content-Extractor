@@ -7,7 +7,8 @@
   "host_permissions": [
     "https://claude.ai/*",
     "https://chatgpt.com/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "https://integrate.api.nvidia.com/*"
   ],
   "background": {
     "service_worker": "background.js"

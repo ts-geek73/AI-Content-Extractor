@@ -7,535 +7,419 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d2e;
-      --surface2: #222536;
-      --border: #2e3250;
-      --accent: #7c6ef5;
-      --accent-glow: rgba(124, 110, 245, 0.25);
-      --accent-hover: #9585f8;
-      --success: #34d399;
-      --success-bg: rgba(52, 211, 153, 0.1);
-      --error: #f87171;
-      --error-bg: rgba(248, 113, 113, 0.1);
-      --warning: #fbbf24;
-      --text: #e4e6f1;
-      --text-muted: #7b82a0;
-      --text-dim: #4a506e;
-      --radius: 12px;
-      --radius-sm: 8px;
+      --bg:          #0f1117;
+      --surface:     #1a1d2e;
+      --surface2:    #222536;
+      --border:      #2e3250;
+      --accent:      #7c6ef5;
+      --accent-glow: rgba(124,110,245,0.2);
+      --accent-h:    #9585f8;
+      --success:     #34d399;
+      --error:       #f87171;
+      --warning:     #fbbf24;
+      --text:        #e4e6f1;
+      --muted:       #7b82a0;
+      --dim:         #4a506e;
+      --r:           8px;
     }
 
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      width: 340px;
-      min-height: 220px;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    /* ===== HEADER ===== */
-    .header {
-      background: linear-gradient(135deg, #1a1d2e 0%, #151828 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 18px;
+      width: 320px;
+      padding: 14px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 10px;
     }
 
-    .logo-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 100%);
-      border-radius: 9px;
+    /* ── HEADER ── */
+    .header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      box-shadow: 0 0 16px var(--accent-glow);
-      flex-shrink: 0;
+      gap: 9px;
     }
-
-    .header-title {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.2px;
-    }
-
-    .header-sub {
-      font-size: 10.5px;
-      color: var(--text-muted);
-      margin-top: 1px;
-      font-weight: 400;
-    }
-
-    .btn-icon {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      width: 30px;
-      height: 30px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
+    .logo {
+      width: 28px; height: 28px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
       font-size: 14px;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      box-shadow: 0 0 12px var(--accent-glow);
     }
+    .header-text { flex: 1; }
+    .header-title { font-size: 13px; font-weight: 700; }
+    .header-sub   { font-size: 10px; color: var(--muted); }
 
-    .btn-icon:hover {
-      background: var(--border);
-      color: var(--text);
-    }
-
-    /* ===== VIEWS ===== */
-    .view {
-      display: none;
-      padding: 18px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .view.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ===== API KEY VIEW ===== */
-    .onboarding-badge {
-      display: inline-flex;
+    /* ── STEP INDICATOR ── */
+    .step-indicator {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: var(--accent-glow);
-      border: 1px solid rgba(124, 110, 245, 0.35);
-      color: var(--accent-hover);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 100px;
-      margin-bottom: 14px;
-      letter-spacing: 0.3px;
-      text-transform: uppercase;
+      gap: 0;
     }
-
-    .setup-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 5px;
+    .step-dot {
+      display: flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 50%;
+      font-size: 11px; font-weight: 700;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      color: var(--muted); flex-shrink: 0;
+      transition: all .2s;
     }
-
-    .setup-desc {
-      font-size: 12px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 16px;
+    .step-dot.active {
+      background: var(--accent); border-color: var(--accent);
+      color: #fff; box-shadow: 0 0 8px var(--accent-glow);
     }
-
-    .form-label {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-      display: block;
+    .step-dot.done {
+      background: var(--success); border-color: var(--success); color: #fff;
     }
-
-    .input-wrap {
-      position: relative;
-      margin-bottom: 12px;
+    .step-line {
+      flex: 1; height: 2px;
+      background: var(--border);
+      transition: background .2s;
     }
-
-    .input-wrap input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 40px 10px 12px;
-      color: var(--text);
-      font-size: 13px;
-      font-family: 'Inter', sans-serif;
-      outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+    .step-line.done { background: var(--success); }
+    .step-labels {
+      display: flex; justify-content: space-between;
+      margin-top: 4px;
     }
+    .step-label {
+      font-size: 9.5px; color: var(--muted); font-weight: 600;
+      text-transform: uppercase; letter-spacing: .3px;
+      flex: 1; text-align: center;
+    }
+    .step-label:first-child { text-align: left; }
+    .step-label:last-child  { text-align: right; }
+    .step-label.active { color: var(--accent); }
+    .step-label.done   { color: var(--success); }
 
-    .input-wrap input:focus {
+    /* ── PLATFORM PILL ── */
+    .platform-pill {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 7px 10px;
+    }
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+      background: var(--warning); box-shadow: 0 0 5px var(--warning);
+    }
+    .dot.ok  { background: var(--success); box-shadow: 0 0 5px var(--success); }
+    .dot.err { background: var(--error);   box-shadow: 0 0 5px var(--error); }
+    .pill-text { flex: 1; font-size: 11.5px; font-weight: 600; }
+    .pill-sub  { font-size: 10px; color: var(--muted); }
+
+    /* ── STEP PANELS ── */
+    .step-panel { display: none; flex-direction: column; gap: 10px; }
+    .step-panel.active { display: flex; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px;
+    }
+    .card-title { font-size: 11.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+
+    /* ── FORM ── */
+    .card-body { padding: 0 12px 12px; border-top: 1px solid var(--border); }
+    .field { margin-top: 10px; }
+    .label {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .4px;
+      display: block; margin-bottom: 4px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 8px 34px 8px 10px;
+      color: var(--text); font-size: 12px; font-family: inherit;
+      outline: none; transition: border-color .18s, box-shadow .18s;
+      appearance: none;
+    }
+    .input-wrap input.no-icon,
+    .input-wrap select.no-icon { padding-right: 10px; }
+    .input-wrap input:focus,
+    .input-wrap select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
-
-    .input-wrap input::placeholder {
-      color: var(--text-dim);
+    .input-wrap input::placeholder { color: var(--dim); }
+    .eye-btn, .arr {
+      position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 13px; pointer-events: auto;
+      display: flex; align-items: center;
     }
+    .arr { pointer-events: none; font-size: 10px; }
+    .eye-btn:hover { color: var(--text); }
 
-    .input-toggle {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text-muted);
-      font-size: 15px;
-      padding: 2px;
-      display: flex;
-      align-items: center;
+    /* ── PROVIDER TABS ── */
+    .tabs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 3px; gap: 3px; margin-top: 10px;
     }
-
-    .input-toggle:hover {
-      color: var(--text);
+    .tab {
+      background: transparent; border: none; border-radius: 6px;
+      padding: 6px 0; font-size: 11.5px; font-weight: 600;
+      color: var(--muted); cursor: pointer; font-family: inherit;
+      transition: all .15s;
     }
+    .tab.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px var(--accent-glow); }
+    .tab:not(.active):hover { color: var(--text); }
 
-    /* ===== BUTTONS ===== */
+    /* ── TEMPLATE LIST ── */
+    .tmpl-list { display: flex; flex-direction: column; gap: 5px; }
+    .tmpl {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--r); padding: 7px 9px; cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .tmpl:hover { border-color: var(--accent); background: rgba(124,110,245,.07); }
+    .tmpl.sel { border-color: var(--accent); background: rgba(124,110,245,.13); }
+    .tmpl-icon { font-size: 15px; flex-shrink: 0; width: 20px; text-align: center; }
+    .tmpl-info { flex: 1; min-width: 0; }
+    .tmpl-name { font-size: 11.5px; font-weight: 600; }
+    .tmpl-desc { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tmpl-check { font-size: 11px; color: var(--accent); opacity: 0; flex-shrink: 0; }
+    .tmpl.sel .tmpl-check { opacity: 1; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      width: 100%; border: none; border-radius: var(--r);
+      padding: 10px; font-size: 13px; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: all .18s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
     .btn-primary {
-      width: 100%;
-      background: linear-gradient(135deg, var(--accent) 0%, #9b89ff 100%);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      padding: 11px 16px;
-      font-size: 13.5px;
-      font-weight: 600;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      box-shadow: 0 4px 16px rgba(124, 110, 245, 0.3);
+      background: linear-gradient(135deg, var(--accent), #9b89ff);
+      color: #fff; box-shadow: 0 4px 14px rgba(124,110,245,.28);
     }
-
     .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, var(--accent-hover) 0%, #a898ff 100%);
-      box-shadow: 0 6px 20px rgba(124, 110, 245, 0.45);
+      background: linear-gradient(135deg, var(--accent-h), #a898ff);
+      box-shadow: 0 6px 18px rgba(124,110,245,.4);
       transform: translateY(-1px);
     }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-ghost {
+      background: var(--surface2); color: var(--muted);
+      border: 1px solid var(--border); font-size: 12px;
+    }
+    .btn-ghost:hover { background: var(--border); color: var(--text); }
+    .btn-sm { padding: 7px 14px; width: auto; font-size: 12px; }
 
-    .btn-primary:active:not(:disabled) {
-      transform: translateY(0);
+    .row-between {
+      display: flex; align-items: center; justify-content: space-between; margin-top: 10px;
     }
 
-    .btn-primary:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
+    /* ── STATUS BAR ── */
+    .status-bar {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 10px 12px;
+      display: none; flex-direction: column; gap: 6px;
     }
-
-    .btn-secondary {
-      width: 100%;
-      background: var(--surface2);
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      margin-top: 8px;
+    .status-bar.show { display: flex; }
+    .status-row { display: flex; align-items: center; gap: 8px; }
+    .status-icon { font-size: 16px; }
+    .status-text { font-size: 12px; font-weight: 600; flex: 1; }
+    .status-sub  { font-size: 10.5px; color: var(--muted); }
+    .progress-track {
+      background: var(--border); border-radius: 100px; height: 4px; overflow: hidden;
     }
-
-    .btn-secondary:hover {
-      background: var(--border);
-      color: var(--text);
+    .progress-fill {
+      height: 100%; border-radius: 100px;
+      background: linear-gradient(90deg, var(--accent), #a78bfa);
+      transition: width .4s ease;
     }
+    .status-bar.success { border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.06); }
+    .status-bar.error   { border-color: rgba(248,113,113,.3); background: rgba(248,113,113,.06); }
 
+    /* ── HELP LINK ── */
     .help-link {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      text-decoration: none;
-      margin-top: 10px;
-      justify-content: center;
-      transition: color 0.2s;
+      font-size: 10.5px; color: var(--muted); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 3px; margin-top: 8px;
     }
+    .help-link:hover { color: var(--accent-h); }
 
-    .help-link:hover {
-      color: var(--accent-hover);
-    }
-
-    /* ===== MAIN VIEW ===== */
-    .platform-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .platform-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
-      flex-shrink: 0;
-    }
-
-    .platform-dot.unsupported {
-      background: var(--error);
-      box-shadow: 0 0 6px var(--error);
-    }
-
-    .platform-dot.unknown {
-      background: var(--warning);
-      box-shadow: 0 0 6px var(--warning);
-    }
-
-    .platform-info {
-      flex: 1;
-    }
-
-    .platform-name {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .platform-status {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 1px;
-    }
-
-    .platform-emoji {
-      font-size: 18px;
-    }
-
-    /* ===== PROGRESS VIEW ===== */
-    .progress-wrap {
-      text-align: center;
-      padding: 8px 0 4px;
-    }
-
-    .progress-icon {
-      font-size: 32px;
-      margin-bottom: 10px;
-      display: block;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.08); opacity: 0.8; }
-    }
-
-    .progress-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .progress-sub {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .progress-bar-track {
-      background: var(--surface2);
-      border-radius: 100px;
-      height: 6px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent) 0%, #a78bfa 100%);
-      border-radius: 100px;
-      transition: width 0.4s ease;
-      box-shadow: 0 0 10px var(--accent-glow);
-    }
-
-    .progress-pct {
-      font-size: 11px;
-      color: var(--text-muted);
-      text-align: right;
-    }
-
-    /* ===== SUCCESS / ERROR VIEW ===== */
-    .result-icon {
-      font-size: 36px;
-      display: block;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .result-title {
-      font-size: 15px;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 5px;
-    }
-
-    .result-title.success { color: var(--success); }
-    .result-title.error   { color: var(--error); }
-
-    .result-msg {
-      font-size: 12px;
-      color: var(--text-muted);
-      text-align: center;
-      line-height: 1.55;
-      margin-bottom: 14px;
-    }
-
-    .result-box {
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      font-size: 12px;
-      line-height: 1.5;
-      margin-bottom: 14px;
-    }
-
-    .result-box.success-box {
-      background: var(--success-bg);
-      border: 1px solid rgba(52, 211, 153, 0.25);
-      color: var(--success);
-    }
-
-    .result-box.error-box {
-      background: var(--error-bg);
-      border: 1px solid rgba(248, 113, 113, 0.25);
-      color: var(--error);
-    }
-
-    /* ===== DIVIDER ===== */
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 14px 0;
-    }
-
-    /* ===== FOOTER NOTE ===== */
-    .footer-note {
-      font-size: 10.5px;
-      color: var(--text-dim);
-      text-align: center;
-      margin-top: 10px;
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px;
     }
   </style>
 </head>
 <body>
 
-  <!-- HEADER (always visible) -->
+  <!-- HEADER -->
   <div class="header">
-    <div class="header-left">
-      <div class="logo-icon">🧠</div>
+    <div class="logo">🧠</div>
+    <div class="header-text">
+      <div class="header-title">AI Content Extractor</div>
+      <div class="header-sub">Claude.ai & ChatGPT → Markdown</div>
+    </div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div>
+    <div class="step-indicator">
+      <div class="step-dot active" id="stepDot1">1</div>
+      <div class="step-line" id="stepLine"></div>
+      <div class="step-dot" id="stepDot2">2</div>
+    </div>
+    <div class="step-labels">
+      <span class="step-label active" id="stepLabel1">API Keys</span>
+      <span class="step-label" id="stepLabel2">Model & Run</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- STEP 1 — API Keys                             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="step-panel active" id="step1">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🔑 API Keys</span>
+      </div>
+      <div class="card-body">
+
+        <!-- Provider tabs -->
+        <div class="tabs" id="providerTabs">
+          <button class="tab active" data-p="gemini">✦ Gemini</button>
+          <button class="tab"        data-p="nvidia">⚡ NVIDIA</button>
+        </div>
+
+        <!-- Gemini pane -->
+        <div id="paneGemini">
+          <div class="field">
+            <label class="label">Gemini API Key</label>
+            <div class="input-wrap">
+              <input type="password" id="geminiKey" placeholder="AIza…" autocomplete="off" spellcheck="false" />
+              <button class="eye-btn" id="eyeGemini">👁️</button>
+            </div>
+            <a class="help-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">🔗 Get free Gemini key · No credit card</a>
+          </div>
+        </div>
+
+        <!-- NVIDIA pane -->
+        <div id="paneNvidia" style="display:none">
+          <div class="field">
+            <label class="label">NVIDIA API Key</label>
+            <div class="input-wrap">
+              <input type="password" id="nvidiaKey" placeholder="nvapi-…" autocomplete="off" spellcheck="false" />
+              <button class="eye-btn" id="eyeNvidia">👁️</button>
+            </div>
+            <a class="help-link" href="https://build.nvidia.com" target="_blank" rel="noopener">🔗 Get free NVIDIA key · Free credits included</a>
+          </div>
+        </div>
+
+        <div class="row-between">
+          <button class="btn btn-ghost btn-sm" id="btnSave">💾 Save Key</button>
+          <span id="saveStatus" style="font-size:10.5px;color:var(--muted)"></span>
+        </div>
+
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btnNext" disabled>
+      Next — Model &amp; Run →
+    </button>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- STEP 2 — Model + Template + Extract           -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="step-panel" id="step2">
+
+    <!-- Platform pill -->
+    <div class="platform-pill">
+      <div class="dot" id="platformDot"></div>
       <div>
-        <div class="header-title">AI Content Extractor</div>
-        <div class="header-sub">Claude.ai & ChatGPT → Markdown</div>
+        <div class="pill-text" id="platformName">Detecting…</div>
+        <div class="pill-sub"  id="platformStatus">Checking active tab</div>
       </div>
     </div>
-    <button class="btn-icon" id="btnSettings" title="Change API Key" style="display:none;">⚙️</button>
-  </div>
 
-  <!-- VIEW 1: API Key Setup -->
-  <div class="view active" id="viewApiKey">
-    <span class="onboarding-badge">🔑 First-time setup</span>
-    <div class="setup-title">Enter your Gemini API Key</div>
-    <div class="setup-desc">Your key is stored locally on your device only — never sent to any server except Google's API.</div>
-
-    <label class="form-label" for="apiKeyInput">Gemini API Key</label>
-    <div class="input-wrap">
-      <input
-        type="password"
-        id="apiKeyInput"
-        placeholder="AIza..."
-        autocomplete="off"
-        spellcheck="false"
-      />
-      <button class="input-toggle" id="toggleVisibility" title="Show/hide key">👁️</button>
-    </div>
-
-    <button class="btn-primary" id="btnSaveKey">
-      <span>💾</span> Save Key &amp; Continue
-    </button>
-
-    <a class="help-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">
-      🔗 Get a free key at aistudio.google.com
-    </a>
-    <div class="footer-note">Free tier available · No credit card required</div>
-  </div>
-
-  <!-- VIEW 2: Main Extraction UI -->
-  <div class="view" id="viewMain">
-    <div class="platform-card">
-      <div class="platform-dot" id="platformDot"></div>
-      <div class="platform-info">
-        <div class="platform-name" id="platformName">Detecting platform…</div>
-        <div class="platform-status" id="platformStatus">Checking current tab</div>
+    <!-- Model selection -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title" id="modelCardTitle">🤖 Model</span>
       </div>
-      <div class="platform-emoji" id="platformEmoji">🔍</div>
-    </div>
+      <div class="card-body">
 
-    <button class="btn-primary" id="btnExtract">
-      <span>⚡</span> Extract Content
-    </button>
+        <!-- Gemini model dropdown -->
+        <div id="modelGemini">
+          <div class="field">
+            <label class="label">Gemini Model</label>
+            <div class="input-wrap">
+              <select id="geminiModel" class="no-icon">
+                <option value="gemini-2.5-flash">gemini-2.5-flash (recommended)</option>
+                <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-    <div class="footer-note" style="margin-top:10px;">Opens Claude.ai or ChatGPT, then click Extract.</div>
-  </div>
+        <!-- NVIDIA model input -->
+        <div id="modelNvidia" style="display:none">
+          <div class="field">
+            <label class="label">NVIDIA Model</label>
+            <div class="input-wrap">
+              <input type="text" id="nvidiaModel" class="no-icon"
+                placeholder="meta/llama-3.3-70b-instruct"
+                autocomplete="off" spellcheck="false" />
+            </div>
+            <a class="help-link" href="https://build.nvidia.com/explore/discover" target="_blank" rel="noopener">🔗 Browse available models</a>
+          </div>
+        </div>
 
-  <!-- VIEW 3: Progress -->
-  <div class="view" id="viewProgress">
-    <div class="progress-wrap">
-      <span class="progress-icon" id="progressIcon">⏳</span>
-      <div class="progress-title" id="progressTitle">Reading page content…</div>
-      <div class="progress-sub" id="progressSub">Please wait, this may take a few seconds.</div>
-      <div class="progress-bar-track">
-        <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
       </div>
-      <div class="progress-pct" id="progressPct">0%</div>
     </div>
-  </div>
 
-  <!-- VIEW 4: Result (Success / Error) -->
-  <div class="view" id="viewResult">
-    <span class="result-icon" id="resultIcon">✅</span>
-    <div class="result-title" id="resultTitle">Done!</div>
-    <div class="result-msg" id="resultMsg"></div>
-    <div class="result-box" id="resultBox"></div>
-    <button class="btn-primary" id="btnAgain">
-      <span>🔄</span> Extract Again
+    <!-- Template selection -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📄 Output Template</span>
+      </div>
+      <div class="card-body" style="padding-top:10px;">
+        <div class="tmpl-list" id="templateList"></div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar" id="statusBar">
+      <div class="status-row">
+        <span class="status-icon" id="statusIcon">⏳</span>
+        <span class="status-text" id="statusText">Working…</span>
+      </div>
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="status-sub" id="statusSub"></div>
+    </div>
+
+    <!-- Actions -->
+    <button class="btn btn-primary" id="btnExtract" disabled>
+      <span>⚡</span> Extract &amp; Convert
     </button>
-    <button class="btn-secondary" id="btnChangeKey">
-      <span>🔑</span> Change API Key
+
+    <button class="btn btn-ghost" id="btnBack" style="font-size:11.5px;padding:7px;">
+      ← Back to API Keys
     </button>
+
   </div>
 
   <script src="popup.js"></script>
