@@ -362,8 +362,26 @@ function msgTimeout(tabId, msg, ms) {
   });
 }
 
+function titleToFilename(title) {
+  const cleaned = String(title || '')
+    .replace(/^\s*#+\s*/, '')
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return cleaned || `content-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}`;
+}
+
+function extractMarkdownTitle(content) {
+  const match = String(content || '').match(/^\s*#\s+(.+)$/m);
+  return match ? match[1].trim() : '';
+}
+
 function downloadMd(content) {
-  const name = `content-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.md`;
+  const title = extractMarkdownTitle(content);
+  const name  = `${titleToFilename(title)}.md`;
   const a    = Object.assign(document.createElement('a'), {
     href:     URL.createObjectURL(new Blob([content], { type: 'text/markdown' })),
     download: name
