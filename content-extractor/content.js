@@ -1,6 +1,6 @@
 
-if (window.__aiExtractorInjected) {
-} else {
+// ─── One-time setup: only run when first injected ─────────────────────────
+if (!window.__aiExtractorInjected) {
   window.__aiExtractorInjected = true;
 
   const PLATFORM_SELECTORS = {
@@ -50,6 +50,122 @@ if (window.__aiExtractorInjected) {
 
   const REMOVE_TAGS = ['script','style','noscript','svg','iframe','canvas','video','audio','head','nav','footer'];
   const KEEP_ATTRS  = new Set(['src','href','alt','title','type']);
+
+  const NOISE_SELECTORS = [
+    'nav', 'header', 'footer', 'aside',
+    '[role="navigation"]', '[role="banner"]', '[role="complementary"]', '[role="contentinfo"]',
+    '[class*="sidebar"]', '[class*="nav"]', '[class*="menu"]', '[class*="ad"]',
+    '[class*="ads"]', '[class*="advert"]', '[class*="cookie"]', '[class*="banner"]',
+    '[class*="popup"]', '[class*="modal"]', '[class*="related"]', '[class*="recommend"]',
+    '[class*="share"]', '[class*="social"]', '[class*="comment"]', '[class*="pagination"]',
+    '[class*="pager"]', '[class*="breadcrumb"]', '[class*="footer"]', '[class*="header"]',
+    '[class*="subscribe"]', '[class*="newsletter"]', '[class*="promo"]',
+    '[id*="sidebar"]', '[id*="nav"]', '[id*="menu"]', '[id*="ad"]', '[id*="ads"]',
+    '[id*="advert"]', '[id*="cookie"]', '[id*="banner"]', '[id*="popup"]', '[id*="modal"]',
+    '[id*="related"]', '[id*="recommend"]', '[id*="share"]', '[id*="social"]',
+    '[id*="comment"]', '[id*="pagination"]', '[id*="pager"]', '[id*="breadcrumb"]',
+    '[id*="footer"]', '[id*="header"]', '[id*="subscribe"]', '[id*="newsletter"]',
+    '[id*="promo"]'
+  ].join(',\n    ');
+
+  /**
+   * Removes all noise elements from the given root element in place.
+   * Mutates the passed root — does not clone.
+   * @param {Element} root
+   */
+  function removeNoise(root) {
+    root.querySelectorAll(NOISE_SELECTORS).forEach(el => el.remove());
+  }
+
+  /**
+   * Returns the DOM depth of an element relative to the document root.
+   * @param {Element} el
+   * @returns {number}
+   */
+  function elementDepth(el) {
+    let depth = 0;
+    let node = el;
+    while (node.parentElement) {
+      depth++;
+      node = node.parentElement;
+    }
+    return depth;
+  }
+
+  /**
+   * Scores a candidate element for main-content likelihood.
+   * Formula: textLength - 25 × linkDensity + 5 × paragraphCount - 10 × (depth > 8 ? 1 : 0)
+   *
+   * @param {Element} el
+   * @returns {number}
+   */
+  function scoreCandidate(el) {
+    const totalText = (el.textContent || '').trim();
+    const textLength = totalText.length;
+
+    if (textLength === 0) return -Infinity;
+
+    // linkDensity: ratio of anchor text to total text (0–1)
+    let anchorTextLength = 0;
+    el.querySelectorAll('a').forEach(a => {
+      anchorTextLength += (a.textContent || '').length;
+    });
+    const linkDensity = anchorTextLength / textLength;
+
+    // paragraphCount: number of <p> descendants
+    const paragraphCount = el.querySelectorAll('p').length;
+
+    // depth penalty
+    const depth = elementDepth(el);
+    const depthPenalty = depth > 8 ? 1 : 0;
+
+    return textLength - 25 * linkDensity + 5 * paragraphCount - 10 * depthPenalty;
+  }
+
+  /**
+   * Selects the main content element from a cleaned root.
+   * Scores all block-level candidate elements (div, article, section, main, p)
+   * with textLength > 200. Returns the highest-scoring element if its score ≥ 20.
+   * Falls back to a DocumentFragment containing all p, h1-h6, li, blockquote, pre
+   * elements if no candidate meets the threshold.
+   *
+   * @param {Element} root
+   * @returns {Element|DocumentFragment}
+   */
+  function selectMainContent(root) {
+    const CANDIDATE_SELECTORS = 'div, article, section, main, p';
+    const candidates = Array.from(root.querySelectorAll(CANDIDATE_SELECTORS));
+
+    let bestEl = null;
+    let bestScore = -Infinity;
+
+    for (const el of candidates) {
+      const textLength = (el.textContent || '').trim().length;
+      if (textLength <= 200) continue;
+
+      const score = scoreCandidate(el);
+      if (score > bestScore) {
+        bestScore = score;
+        bestEl = el;
+      }
+    }
+
+    if (bestEl !== null && bestScore >= 20) {
+      return bestEl;
+    }
+
+    // Fallback: collect all prose elements into a fragment
+    const FALLBACK_SELECTORS = 'p, h1, h2, h3, h4, h5, h6, li, blockquote, pre';
+    const fragment = root.ownerDocument
+      ? root.ownerDocument.createDocumentFragment()
+      : document.createDocumentFragment();
+
+    root.querySelectorAll(FALLBACK_SELECTORS).forEach(el => {
+      fragment.appendChild(el.cloneNode(true));
+    });
+
+    return fragment;
+  }
 
   function cleanNode(root) {
     REMOVE_TAGS.forEach(tag => {
@@ -145,6 +261,74 @@ if (window.__aiExtractorInjected) {
     return Array.from(node.childNodes).map(htmlToMarkdown).join('');
   }
 
+  /**
+   * Counts words in a string by splitting on whitespace.
+   * @param {string} text
+   * @returns {number}
+   */
+  function wordCount(text) {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  /**
+   * Extracts the main readable content from the current page.
+   * Steps:
+   *   1. Clone document.body
+   *   2. Strip REMOVE_TAGS elements (script, style, noscript, etc.)
+   *   3. Strip NOISE_SELECTORS elements
+   *   4. Score candidates and select the highest-scoring element
+   *   5. If no candidate scores ≥ 20, fall back to p/h1-h6/li/blockquote/pre
+   *   6. Convert to Markdown via htmlToMarkdown
+   *   7. Collapse \n{3,} → \n\n
+   *   8. Throw if result < 100 chars after trim
+   *   9. Return { cleanedText, title, wordCount }
+   *
+   * @returns {{ cleanedText: string, title: string, wordCount: number }}
+   */
+  function extractPageContent() {
+    // Step 1: Clone document.body
+    const bodyClone = document.body.cloneNode(true);
+
+    // Step 2: Strip REMOVE_TAGS (script, style, noscript, iframe, canvas, video, audio, svg)
+    const PAGE_REMOVE_TAGS = ['script', 'style', 'noscript', 'iframe', 'canvas', 'video', 'audio', 'svg'];
+    PAGE_REMOVE_TAGS.forEach(tag => {
+      bodyClone.querySelectorAll(tag).forEach(el => el.remove());
+    });
+
+    // Step 3: Strip NOISE_SELECTORS elements
+    removeNoise(bodyClone);
+
+    // Step 4 & 5: Score candidates; select highest-scoring element (falls back internally)
+    const mainContent = selectMainContent(bodyClone);
+
+    // Step 6: Convert selected content to Markdown
+    let markdown;
+    if (mainContent instanceof DocumentFragment) {
+      // Convert each child node and join
+      markdown = Array.from(mainContent.childNodes).map(htmlToMarkdown).join('');
+    } else {
+      markdown = htmlToMarkdown(mainContent);
+    }
+
+    // Step 7: Collapse \n{3,} → \n\n
+    let cleanedText = markdown.replace(/\n{3,}/g, '\n\n');
+
+    // Trim trailing/leading whitespace
+    cleanedText = cleanedText.trim();
+
+    // Step 8: Throw if result < 100 chars
+    if (cleanedText.length < 100) {
+      throw new Error('No readable content found on this page.');
+    }
+
+    // Step 9: Return result
+    return {
+      cleanedText,
+      title: document.title,
+      wordCount: wordCount(cleanedText)
+    };
+  }
+
   async function extractContent() {
     const platform = detectPlatform();
     if (!platform) {
@@ -223,23 +407,42 @@ if (window.__aiExtractorInjected) {
     };
   }
 
-  // ─── Message Listener ─────────────────────────────────────────────────────
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'EXTRACT') {
-      extractContent()
-        .then(result => {
-          sendResponse({
-            cleanedText:  result.cleanedText,
-            imageUrls:    result.imageUrls,
-            platform:     result.platform,
-            messageCount: result.messageCount
-          });
-        })
-        .catch(err => {
-          sendResponse({ error: err.message });
-        });
+  // Expose extraction functions on window so the message listener (registered
+  // outside this guard) can always call them, even after a second injection
+  // re-runs the outer listener registration without re-running this block.
+  window.__aiExtract     = extractContent;
+  window.__aiExtractPage = extractPageContent;
 
-      return true; // Keep message channel open for async
-    }
-  });
-}
+} // end if (!window.__aiExtractorInjected)
+
+// ─── Message Listeners ────────────────────────────────────────────────────
+// Registered OUTSIDE the injection guard so they are always re-registered
+// even when content.js is injected a second time. This ensures both EXTRACT
+// and EXTRACT_PAGE messages work correctly after double injection (Req 7.4).
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'EXTRACT') {
+    window.__aiExtract()
+      .then(result => {
+        sendResponse({
+          cleanedText:  result.cleanedText,
+          imageUrls:    result.imageUrls,
+          platform:     result.platform,
+          messageCount: result.messageCount
+        });
+      })
+      .catch(err => {
+        sendResponse({ error: err.message });
+      });
+
+    return true; // Keep message channel open for async
+  }
+
+  if (message.action === 'EXTRACT_PAGE') {
+    Promise.resolve()
+      .then(() => window.__aiExtractPage())
+      .then(result => sendResponse(result))
+      .catch(err  => sendResponse({ error: err.message }));
+
+    return true; // Keep message channel open for async
+  }
+});

@@ -6,13 +6,20 @@ const DEFAULT_NVIDIA_MODEL = 'meta/llama-3.3-70b-instruct';
 const TEMPLATES = [
   { id: 'summary',     emoji: '💬', label: 'Chat Session Summary',         desc: 'What was discussed, decided, and what\'s still pending' },
   { id: 'methodology', emoji: '🔁', label: 'Extract Reusable Methodology', desc: 'Turn what worked into a repeatable step-by-step process' },
-  { id: 'plan',        emoji: '🗺️', label: 'Plan Extraction',              desc: 'Pull out goals, features, priorities & tasks' }
+  { id: 'plan',        emoji: '🗺️', label: 'Plan Extraction',              desc: 'Pull out goals, features, priorities & tasks' },
+  { id: 'page_summary',emoji: '📰', label: 'Page Summary',                 desc: 'Title, overview, key points & conclusion from any webpage' }
 ];
+
+// Templates shown in Chat_Mode (existing three)
+const CHAT_TEMPLATE_IDS = ['summary', 'methodology', 'plan'];
+// Template shown in Page_Mode
+const PAGE_TEMPLATE_IDS = ['page_summary'];
 
 // ─── State ────────────────────────────────────────────────────────────────────
 let provider         = 'gemini';
 let selectedTemplate = 'summary';
 let currentStep      = 1;
+let isPageMode       = false;   // true when active tab is not claude.ai / chatgpt.com
 
 // ─── DOM refs ─────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
@@ -42,6 +49,7 @@ const el = {
   platformDot:   $('platformDot'),
   platformName:  $('platformName'),
   platformStatus:$('platformStatus'),
+  modeIndicator: $('modeIndicator'),
   modelCardTitle:$('modelCardTitle'),
   modelGemini:   $('modelGemini'),
   modelNvidia:   $('modelNvidia'),
@@ -161,8 +169,20 @@ async function checkNextEnabled() {
 
 // ─── Templates ────────────────────────────────────────────────────────────────
 function renderTemplates() {
+  // In Page_Mode show only page_summary; in Chat_Mode show the three chat templates
+  const visibleIds = isPageMode ? PAGE_TEMPLATE_IDS : CHAT_TEMPLATE_IDS;
+  const visible    = TEMPLATES.filter(t => visibleIds.includes(t.id));
+
+  // Auto-select the appropriate default for the current mode
+  if (isPageMode) {
+    selectedTemplate = 'page_summary';
+  } else if (!CHAT_TEMPLATE_IDS.includes(selectedTemplate)) {
+    // Coming back from Page_Mode — reset to first chat template
+    selectedTemplate = 'summary';
+  }
+
   el.templateList.innerHTML = '';
-  TEMPLATES.forEach(t => {
+  visible.forEach(t => {
     const div = document.createElement('div');
     div.className = 'tmpl' + (t.id === selectedTemplate ? ' sel' : '');
     div.innerHTML = `
@@ -194,26 +214,78 @@ async function detectPlatform() {
     const onClaude  = url.includes('claude.ai');
     const onChatGPT = url.includes('chatgpt.com');
 
-    if (onClaude) {
-      setDot('ok', 'Claude.ai', hasKey ? 'Ready to extract' : 'Save your API key first');
-    } else if (onChatGPT) {
-      setDot('ok', 'ChatGPT', hasKey ? 'Ready to extract' : 'Save your API key first');
+    isPageMode = !onClaude && !onChatGPT;
+
+    if (isPageMode) {
+      // ── Page_Mode ──────────────────────────────────────────────────────────
+      let hostname = '';
+      let pageTitle = tab?.title || '';
+      try {
+        hostname = new URL(url).hostname;
+      } catch (_) {
+        hostname = url;
+      }
+
+      // Truncate title and domain to 30 chars each
+      const displayTitle  = pageTitle.length  > 30 ? pageTitle.slice(0, 30)  + '…' : pageTitle;
+      const displayDomain = hostname.length   > 30 ? hostname.slice(0, 30)   + '…' : hostname;
+
+      const pillName   = displayTitle || displayDomain;
+      const pillSub    = displayTitle ? displayDomain : '';
+      const dotCls     = hasKey ? 'ok' : 'err';
+      const statusText = hasKey ? 'Ready to summarize' : 'Save your API key first';
+
+      setDot(dotCls, pillName, statusText);
+      if (pillSub) el.platformStatus.textContent = statusText;
+
+      // Mode indicator badge
+      if (el.modeIndicator) {
+        el.modeIndicator.textContent = 'Page Summarizer';
+        el.modeIndicator.className   = 'mode-badge page';
+      }
+
+      // Button label
+      el.btnExtract.textContent = '';
+      el.btnExtract.innerHTML   = '<span>📄</span> Summarize Page';
+
+      // Status bar
+      if (!hasKey) {
+        showStatus('🔑', 'No API key saved', 'Go back and save your key', 0, 'error');
+      } else {
+        el.statusBar.className = 'status-bar';
+      }
+
+      el.btnExtract.disabled = !hasKey;
+
     } else {
-      setDot('err', 'Unsupported page', 'Navigate to Claude.ai or ChatGPT');
+      // ── Chat_Mode — preserve all existing behavior ─────────────────────────
+      if (onClaude) {
+        setDot('ok', 'Claude.ai', hasKey ? 'Ready to extract' : 'Save your API key first');
+      } else {
+        setDot('ok', 'ChatGPT', hasKey ? 'Ready to extract' : 'Save your API key first');
+      }
+
+      // Mode indicator badge
+      if (el.modeIndicator) {
+        el.modeIndicator.textContent = 'Chat Extraction';
+        el.modeIndicator.className   = 'mode-badge chat';
+      }
+
+      // Button label
+      el.btnExtract.innerHTML = '<span>⚡</span> Extract &amp; Convert';
+
+      if (!hasKey) {
+        showStatus('🔑', 'No API key saved', 'Go back and save your key', 0, 'error');
+      } else {
+        el.statusBar.className = 'status-bar';
+      }
+
+      el.btnExtract.disabled = !hasKey;
     }
 
-    const onSupportedPage = onClaude || onChatGPT;
+    // Render templates appropriate for the current mode
+    renderTemplates();
 
-    if (!hasKey) {
-      showStatus('🔑', 'No API key saved', 'Go back and save your key', 0, 'error');
-    } else if (!onSupportedPage) {
-      showStatus('🔴', 'Wrong page', 'Open Claude.ai or ChatGPT first', 0, 'error');
-    } else {
-      // Clear any leftover error status
-      el.statusBar.className = 'status-bar';
-    }
-
-    el.btnExtract.disabled = !hasKey || !onSupportedPage;
   } catch (_) {
     setDot('', 'Cannot detect tab', 'Check permissions');
     el.btnExtract.disabled = true;
@@ -260,7 +332,83 @@ el.btnExtract.addEventListener('click', async () => {
   }
 
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url   = tab?.url || '';
+
+  // ── Page_Mode branch ────────────────────────────────────────────────────────
+  if (isPageMode) {
+    el.btnExtract.disabled = true;
+    el.btnBack.disabled    = true;
+
+    // Step 1 — inject content script and extract page content
+    showStatus('⏳', 'Reading page…', 'Scanning content', 20);
+    try {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] });
+    } catch (_) {}
+    await sleep(150);
+
+    let extracted;
+    try {
+      extracted = await msgTimeout(tab.id, { action: 'EXTRACT_PAGE' }, 30000);
+    } catch (e) {
+      showStatus('❌', 'Extraction failed', e.message, 0, 'error');
+      el.btnExtract.disabled = false;
+      el.btnBack.disabled    = false;
+      return;
+    }
+
+    if (extracted?.error) {
+      showStatus('❌', 'Extraction failed', extracted.error, 0, 'error');
+      el.btnExtract.disabled = false;
+      el.btnBack.disabled    = false;
+      return;
+    }
+
+    const { cleanedText, title } = extracted;
+
+    // Step 2 — call AI with page_summary template
+    showStatus('🤖', 'Processing with AI…', `Using ${model}`, 60);
+
+    const payload = cleanedText.length > 30000
+      ? cleanedText.slice(0, 30000) + '\n\n[… truncated …]'
+      : cleanedText;
+
+    let aiResult;
+    try {
+      aiResult = await msgTimeout(null,
+        { action: 'CALL_AI', provider, apiKey, model, content: payload, templateId: 'page_summary' },
+        60000
+      );
+    } catch (e) {
+      showStatus('❌', 'AI call failed', e.message, 0, 'error');
+      el.btnExtract.disabled = false;
+      el.btnBack.disabled    = false;
+      return;
+    }
+
+    if (aiResult?.error) {
+      showStatus('❌', 'AI error', aiResult.error, 0, 'error');
+      el.btnExtract.disabled = false;
+      el.btnBack.disabled    = false;
+      return;
+    }
+
+    // Step 3 — derive filename and download
+    showStatus('📝', 'Preparing download…', '', 95);
+    await sleep(300);
+
+    // Filename priority: first # heading in AI response → page title → timestamp
+    const mdTitle = extractMarkdownTitle(aiResult.markdown);
+    const rawName = mdTitle || title || '';
+    const filename = `${titleToFilename(rawName)}.md`;
+
+    downloadMd(aiResult.markdown);
+    showStatus('✅', 'Done!', `Saved as ${filename}`, 100, 'success');
+    el.btnExtract.disabled = false;
+    el.btnBack.disabled    = false;
+    return;
+  }
+
+  // ── Chat_Mode branch (existing behavior) ────────────────────────────────────
+  const url = tab?.url || '';
 
   if (!url.includes('claude.ai') && !url.includes('chatgpt.com')) {
     showStatus('🔴', 'Wrong page', 'Open Claude.ai or ChatGPT first', 0, 'error');

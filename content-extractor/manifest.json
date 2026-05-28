@@ -5,6 +5,7 @@
   "description": "Extract and convert AI chat content to clean Markdown",
   "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": [
+    "<all_urls>",
     "https://claude.ai/*",
     "https://chatgpt.com/*",
     "https://generativelanguage.googleapis.com/*",
