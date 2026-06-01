@@ -461,6 +461,7 @@ ${templateInstruction}
 NEVER:
 - ❌ Add, infer, or hallucinate content not present in the input
 - ❌ Truncate, summarize, or paraphrase code — reproduce it 100% exactly
+- ❌ Truncate or modify SVG blocks — reproduce them 100% exactly as-is
 - ❌ Change technical terms, variable names, or proper nouns
 - ❌ Reorder conversation exchanges
 - ❌ Include UI strings: "Copy", "Retry", "Edit", "Like", "Dislike", "Share"
@@ -473,6 +474,7 @@ ALWAYS:
 - ✅ Apply the Self-Correction Gate as the final step before writing
 - ✅ Reproduce the exact conversation sequence without reordering
 - ✅ Preserve all code indentation and whitespace perfectly
+- ✅ Preserve all SVG diagram blocks verbatim — place them inline where they appear in the conversation
 - ✅ Add a language identifier to every fenced code block
 - ✅ Use ## for top-level section headers, ### for subsections — consistently
 - ✅ Strip all HTML tags, class names, IDs, and data attributes from output
